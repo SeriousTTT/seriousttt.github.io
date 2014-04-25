@@ -1,0 +1,25 @@
+/* start /scripts/web-platform/web-data-tracker.js*/
+
+var DTKR=(function(){var obj={};obj.delay=true;obj.page={};obj.evnt={};obj.vst={};function _visitCookie(){var _cookieData,_expires=new Date().getTime();var _EXP_TIME=157680000000;var _infoExpires=new Date(_expires+_EXP_TIME);if(wpCookie('dtVisInfo')){_cookieData=wpCookie('dtVisInfo').split(":");obj.vst.visitNumber=parseInt(_cookieData[0]);if(wpCookie('dtVisTmr')!='true'){obj.vst.visitNumber=obj.vst.visitNumber+1;obj.vst.firstPage=true;}
+obj.vst.pageNumber=parseInt(_cookieData[1])+1;obj.vst.timeOfFirstVisit=parseInt(_cookieData[2]);obj.vst.sessionId=_cookieData[3]||"";obj.vst.lpid=_cookieData[4]||"";if(typeof globs.urlparameters["sessionId"]!=="undefined"){obj.vst.sessionId=globs.urlparameters["sessionId"];}
+if(typeof globs.urlparameters["lpid"]!=="undefined"){obj.vst.lpid=globs.urlparameters["lpid"];}}else{obj.vst.visitNumber=1;obj.vst.pageNumber=1;obj.vst.timeOfFirstVisit=new Date().getTime();obj.vst.firstPage=true;obj.vst.sessionId=globs.urlparameters["sessionId"]||"";obj.vst.lpid=globs.urlparameters["lpid"]||"";}
+_cookieData=[obj.vst.visitNumber,obj.vst.pageNumber,obj.vst.timeOfFirstVisit,obj.vst.sessionId,obj.vst.lpid];wpCookie("dtVisInfo",_cookieData.join(":"),_infoExpires);_setVisitTimer();};function _setVisitTimer(){var _visitExpires=new Date().getTime();_visitExpires=new Date(_visitExpires+3600000);wpCookie('dtVisTmr',true,_visitExpires);};_visitCookie();function _setTimeLapse(){if(obj.vst.timeOfFirstVisit!=='undefined'){var _time=new Date().getTime();_time=_time-parseInt(obj.vst.timeOfFirstVisit);if(_time<3600000){_time=_time/60000;_time=""+Math.floor(_time)+"mins";}else if(_time<86400000){_time=_time/3600000;_time=""+Math.floor(_time)+"hours";}else{_time=_time/86400000;_time=""+Math.floor(_time)+"days";}
+obj.evnt.timeLapse=_time;}};obj.getPageName=function(gameName){var _pageName=window.location.pathname.replace(/^(\/)|(\.[^/]+?)$/g,'').replace(/\//g," : ");_pageName=_pageName||"index";_pageName=gameName+" : "+_pageName.toLowerCase();return _pageName;};obj.trackPageView=function(override){var _prop,_data={};for(_prop in obj.evnt){_data[_prop]="";}
+if(override){for(_prop in override){obj.page[_prop]=override[_prop];}}
+for(_prop in obj.vst){_data[_prop]=obj.vst[_prop];}
+for(_prop in obj.page){_data[_prop]=obj.page[_prop];}
+obj.buffer.add(_data,"view");};obj.trackEvent=function(override){var _prop,_data={};_setTimeLapse();if(override){for(_prop in override){obj.evnt[_prop]=override[_prop];}}
+for(_prop in obj.vst){_data[_prop]=obj.vst[_prop];}
+for(_prop in obj.page){_data[_prop]=obj.page[_prop];}
+for(_prop in obj.evnt){_data[_prop]=obj.evnt[_prop];}
+obj.buffer.add(_data,"link");for(_prop in obj.evnt){obj.evnt[_prop]="";}};var notifyURL='https://www.soe.com/notify.m';var domainRegex=/local|dev|test|qa/;if(domainRegex.test(document.domain)){notifyURL="https://qa.soe.com/notify.m";}
+obj.notify=function(evnt){var cid,_cookieData=wpCookie('dtVisInfo').split(":");if(evnt=='acct_complete'||evnt=='acct_create_displayed'){cid=wpCookie('cmpID30')||"";}else{cid=wpCookie('soe_cid')||"";}
+if(typeof obj.vst.visitorID==='undefined'&&typeof omnitureKey==='function'){obj.vst.visitorID=omnitureKey();}
+var _dataArray=[];var _dataString,_dataImage,_props;var _notifyData={'env':obj.page.env,'gameCode':obj.page.game,'stationId':'','url':obj.page.url.split("?")[0],'CID':cid||"",'omnitureID':obj.vst.visitorID,'event':evnt,'pageName':(obj.page.pageName?obj.page.pageName.replace(/[^A-Za-z0-9:\s]/g,""):""),'cookie':(obj.vst.visitNumber>1?'returnPlayer':'newAcquisition'),'sessionId':_cookieData[3]||"",'lpid':_cookieData[4]||""};for(_props in _notifyData){_dataArray.push(''+_props+'='+encodeURIComponent(_notifyData[_props]));}
+_dataString=_dataArray.join('&');_dataImage=document.createElement('img');_dataImage.src=notifyURL+'?'+_dataString;};obj.receiveEvent=function(evt,func){$(document).on("dtkr_"+evt,func);};obj.sendEvent=function(evt){$(document).trigger("dtkr_"+evt);};return obj;})();DTKR.buffer=(function(){var _buffer=[];var active=false;var _SPD=50;var _FIRE_SPD=10;var _waitCount=0;var _WAIT_EXP=15;var add=function(data,func){var _data={payload:data,func:func};_buffer.push(_data);if(active){_fire();}};var _fire=function(){var _data;if(_buffer.length>0){_data=_buffer.shift();if(typeof omnitureKey==='function'){_data.payload.visitorID=omnitureKey();}
+_data.payload.triggerOmn=true;utag[_data.func](_data.payload);try{s.events="";}catch(e){}
+setTimeout(function(){_fire();},_FIRE_SPD);}};var _testForOmn=function(){if(typeof utag!=='undefined'&&typeof s!=='undefined'){active=true;_fire();}else{setTimeout(function(){_testForOmn();},_SPD);}};var _testForSession=function(){if(typeof omnitureKey!=='undefined'||_waitCount>_WAIT_EXP){if(DTKR.vst.firstPage){if(typeof omnitureKey!=='undefined'){DTKR.vst.visitorID=omnitureKey();}
+DTKR.notify('webVisitStart');}
+_testForOmn();}else{_waitCount+=1;setTimeout(function(){_testForSession();},_SPD);}};$(document).ready(function(){_testForSession();});return{add:add,active:active};})();
+
+/* end /scripts/web-platform/web-data-tracker.js*/
